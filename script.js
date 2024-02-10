@@ -6,7 +6,7 @@ const analysisScreen = document.getElementById('analysis-screen');
 const teamCountLabel = document.getElementById('team-count-label');
 
 var teamCount = 1;
-var attributes = ["", "", "", "", "", ""];
+var attributes = ["Attribute 1", "Attribute 2", "Attribute 3", "Attribute 4", "Attribute 5", "Attribute 6"];
 var teamData = [];
 var teamAverages = [];
 var cumulativeAverages = [0, 0, 0, 0, 0, 0];
@@ -25,6 +25,12 @@ function submitCount() {
 }
 
 function submitAttributes() {
+    // Check if any of the 6 attribute fields are empty
+    const isEmpty = Array.from(document.querySelectorAll('input[type="text"]')).some(input => input.value.trim() === '');
+    if (isEmpty) {
+        alert("Please fill in all attribute fields!");
+        return;
+    }
     attributes[0] = document.querySelector('input[name="att1"]').value;
     attributes[1] = document.querySelector('input[name="att2"]').value;
     attributes[2] = document.querySelector('input[name="att3"]').value;
@@ -39,11 +45,11 @@ function submitAttributes() {
 }
 
 function submitTeams() {
+    computeAverages();
     setTimeout(function() {
         teamScreen.style.opacity = '0';
         transitionHelper(teamScreen, analysisScreen);
     }, 900);
-    computeAverages();
     generateAnalysis();
 }
 
@@ -144,7 +150,7 @@ function generateAnalysis() {
         // Kiviat Diagram for each team
         var kiviatDiagramData = [{
             type: 'scatterpolar',
-            r: [teamAverages[i][0], teamAverages[i][1], teamAverages[i][2], teamAverages[i][3], teamAverages[i][4], teamAverages[i][5]],
+            r: [teamAverages[i-1][0], teamAverages[i-1][1], teamAverages[i-1][2], teamAverages[i-1][3], teamAverages[i-1][4], teamAverages[i-1][5]],
             theta: [attributes[0], attributes[1], attributes[2], attributes[3], attributes[4], attributes[5]],
             fill: 'toself',
             name: 'Team Avg',
@@ -179,7 +185,7 @@ function generateAnalysis() {
         analysisScreen.appendChild(barChart);
         var barChartData = [{
             x: [attributes[0], attributes[1], attributes[2], attributes[3], attributes[4], attributes[5]],
-            y: [teamAverages[i][0], teamAverages[i][1], teamAverages[i][2], teamAverages[i][3], teamAverages[i][4], teamAverages[i][5]],
+            y: [teamAverages[i-1][0], teamAverages[i-1][1], teamAverages[i-1][2], teamAverages[i-1][3], teamAverages[i-1][4], teamAverages[i-1][5]],
             type: 'bar',
             name: 'Team Avg',
             marker: {
