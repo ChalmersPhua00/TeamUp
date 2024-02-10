@@ -6,33 +6,21 @@ const analysisScreen = document.getElementById('analysis-screen');
 const teamCountLabel = document.getElementById('team-count-label');
 
 var teamCount = 1;
-var attributes = ["Attribute 1", "Attribute 2", "Attribute 3", "Attribute 4", "Attribute 5", "Attribute 6"];
+var attributes = ["", "", "", "", "", ""];
 var teamData = [];
+var teamAverages = [];
+var cumulativeAverages = [0, 0, 0, 0, 0, 0];
 
 document.addEventListener("DOMContentLoaded", function() {
     setTimeout(function() {
-        splashScreen.style.opacity = '0';
-        setTimeout(function() {
-            splashScreen.style.display = 'none';
-            countScreen.style.display = 'flex';
-            setTimeout(function() {
-                countScreen.style.opacity = '1';
-            }, 100);
-        }, 800);
+        transitionHelper(splashScreen, countScreen);
     }, 900);
 });
 
 function submitCount() {
     teamCount = parseInt(document.querySelector("#count-slider").value);
     setTimeout(function() {
-        countScreen.style.opacity = '0';
-        setTimeout(function() {
-            countScreen.style.display = 'none';
-            attributeScreen.style.display = 'flex';
-            setTimeout(function() {
-                attributeScreen.style.opacity = '1';
-            }, 100);
-        }, 800);
+        transitionHelper(countScreen, attributeScreen);
     }, 900);
 }
 
@@ -44,14 +32,7 @@ function submitAttributes() {
     attributes[4] = document.querySelector('input[name="att5"]').value;
     attributes[5] = document.querySelector('input[name="att6"]').value;
     setTimeout(function() {
-        attributeScreen.style.opacity = '0';
-        setTimeout(function() {
-            attributeScreen.style.display = 'none';
-            teamScreen.style.display = 'flex';
-            setTimeout(function() {
-                teamScreen.style.opacity = '1';
-            }, 100);
-        }, 800);
+        transitionHelper(attributeScreen, teamScreen);
     }, 900);
     generateTeams();
     createDataStorage();
@@ -60,18 +41,25 @@ function submitAttributes() {
 function submitTeams() {
     setTimeout(function() {
         teamScreen.style.opacity = '0';
-        setTimeout(function() {
-            teamScreen.style.display = 'none';
-            analysisScreen.style.display = 'flex';
-            setTimeout(function() {
-                analysisScreen.style.opacity = '1';
-            }, 100);
-        }, 800);
+        transitionHelper(teamScreen, analysisScreen);
     }, 900);
+    computeAverages();
     generateAnalysis();
 }
 
+function transitionHelper(hide, show) {
+    hide.style.opacity = '0';
+    setTimeout(function() {
+        hide.style.display = 'none';
+        show.style.display = 'flex';
+        setTimeout(function() {
+            show.style.opacity = '1';
+        }, 100);
+    }, 800);
+}
+
 function generateTeams() {
+    // Generate content for team screen
     teamScreen.innerHTML = '';
     for (let i = 1; i <= teamCount; i++) {
         const label = document.createElement('label');
@@ -92,6 +80,7 @@ function generateTeams() {
         teamDiv.appendChild(button);
         teamScreen.appendChild(teamDiv);
     }
+    // Set up button to the next page
     const nextButton = document.createElement('button');
     nextButton.textContent = 'Next';
     nextButton.classList.add('button-75');
@@ -100,6 +89,7 @@ function generateTeams() {
 }
 
 function addTeamMember(teamDiv) {
+    // Once the user decides to add a member, prompt a series of inputs
     const name = prompt("Enter team member's name:");
     if (name === null) return;
     const card = document.createElement('div');
@@ -118,8 +108,10 @@ function addTeamMember(teamDiv) {
         }
         scores.push(value)
     }
+    // Store user inputs in a data structure
     const teamIndex = parseInt(teamDiv.classList[0].split('-')[2]) - 1;
     teamData[teamIndex].push(scores);
+    // Display attribute scores assigned by the user on the flip side of the card
     for (let i = 0; i < attributes.length; i++) {
         const attributeSpan = document.createElement('span');
         attributeSpan.textContent = attributes[i] + ": " + scores[i];
@@ -133,10 +125,12 @@ function addTeamMember(teamDiv) {
 function createDataStorage() {
     for (let i = 0; i < teamCount; i++) {
         teamData.push([]);
+        teamAverages.push([]);
     }
 }
 
 function generateAnalysis() {
+    // Generate content for analysis screen
     analysisScreen.innerHTML = '';
     for (let i = 1; i <= teamCount; i++) {
         const label = document.createElement('label');
@@ -147,9 +141,10 @@ function generateAnalysis() {
         kiviatDiv.id = 'kiviatDiagram' + i;
         kiviatDiv.classList.add('kiviatDiagram');
         analysisScreen.appendChild(kiviatDiv);
+        // Kiviat Diagram for each team
         var kiviatDiagramData = [{
             type: 'scatterpolar',
-            r: [10, 20, 30, 40, 50, 60], ////
+            r: [teamAverages[i][0], teamAverages[i][1], teamAverages[i][2], teamAverages[i][3], teamAverages[i][4], teamAverages[i][5]],
             theta: [attributes[0], attributes[1], attributes[2], attributes[3], attributes[4], attributes[5]],
             fill: 'toself',
             name: 'Team Avg',
@@ -158,7 +153,7 @@ function generateAnalysis() {
             }
         }, {
             type: 'scatterpolar',
-            r: [20, 40, 10, 50, 80, 40], ////
+            r: [cumulativeAverages[0], cumulativeAverages[1], cumulativeAverages[2], cumulativeAverages[3], cumulativeAverages[4], cumulativeAverages[5]],
             theta: [attributes[0], attributes[1], attributes[2], attributes[3], attributes[4], attributes[5]],
             fill: 'toself',
             name: 'Cumu Avg',
@@ -177,16 +172,14 @@ function generateAnalysis() {
             paper_bgcolor: 'transparent'
         };
         Plotly.newPlot('kiviatDiagram' + i, kiviatDiagramData, kiviatDiagramLayout);
-
-
-
+        // Bar Chart for each team
         const barChart = document.createElement('div');
         barChart.id = 'barChart' + i;
         barChart.classList.add('barChart');
         analysisScreen.appendChild(barChart);
         var barChartData = [{
             x: [attributes[0], attributes[1], attributes[2], attributes[3], attributes[4], attributes[5]],
-            y: [10, 20, 30, 40, 50, 60], ////
+            y: [teamAverages[i][0], teamAverages[i][1], teamAverages[i][2], teamAverages[i][3], teamAverages[i][4], teamAverages[i][5]],
             type: 'bar',
             name: 'Team Avg',
             marker: {
@@ -194,7 +187,7 @@ function generateAnalysis() {
             }
         }, {
             x: [attributes[0], attributes[1], attributes[2], attributes[3], attributes[4], attributes[5]],
-            y: [60, 40, 50, 30, 60], ////
+            y: [cumulativeAverages[0], cumulativeAverages[1], cumulativeAverages[2], cumulativeAverages[3], cumulativeAverages[4], cumulativeAverages[5]],
             type: 'bar',
             name: 'Cumu Avg',
             marker: {
@@ -212,8 +205,27 @@ function generateAnalysis() {
         };
         Plotly.newPlot('barChart' + i, barChartData, barChartLayout);
     }
-    //console.log(teamData[0][0][0]); First team First member First attribute
-    //console.log(teamData[0][0][1]); First team First member Second attribute
+}
+
+function computeAverages() {
+    for (let i = 0; i < teamCount; i++) {
+        let teamAverage = [0, 0, 0, 0, 0, 0]; // Initialize team average array
+        for (let j = 0; j < teamData[i].length; j++) {
+            for (let k = 0; k < attributes.length; k++) {
+                teamAverage[k] += teamData[i][j][k]; // Accumulate scores for each attribute
+            }
+        }
+        for (let k = 0; k < attributes.length; k++) {
+            teamAverage[k] /= teamData[i].length; // Calculate average for each attribute
+        }
+        teamAverages[i] = teamAverage;
+        for (let j = 0; j < attributes.length; j++) {
+            cumulativeAverages[j] += teamAverages[i][j]; // Accumulate team averages
+        }
+    }
+    for (let j = 0; j < attributes.length; j++) {
+        cumulativeAverages[j] /= teamCount;
+    }
 }
 
 function updateTeamCountLabel() {
